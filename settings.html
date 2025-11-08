@@ -1,0 +1,384 @@
+<div class="extension-block popupmemo-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>팝업 메모 설정</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        
+        <div class="inline-drawer-content">
+            <div class="control-group">
+                <label class="flex-container-checkbox-inline">
+                    <input type="checkbox" id="memo_enable_toggle">
+                    <span>메모장 활성화</span>
+                </label>
+            </div>
+
+            <hr class="sysHR">
+
+            <div class="menu-section">
+                <h3>배경 및 투명도 설정</h3>
+                <div class="control-group">
+                    <label>
+                        투명도 (0.0 ~ 1.0): 
+                        <input type="number" id="memo_bg_opacity_input" value="0.7" min="0.0" max="1.0" step="0.05">
+                    </label>
+                    <label>
+                        배경 이미지 URL (선택 사항):
+                        <input type="text" id="memo_bg_image_input" placeholder="이미지 URL을 입력하세요">
+                    </label>
+                    <div class="button-row">
+                        <button id="memo_apply_bg_btn" class="menu_button blue_button">배경 이미지 적용/업데이트</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="sysHR">
+            
+            <div class="menu-section">
+                <h3>말풍선 설정 (전역)</h3>
+                <p class="memo-hint">말풍선은 5초마다 자동으로 바뀝니다</p>
+                
+                <div class="control-group">
+                    <label>
+                        캐릭터 말풍선 색상:
+                        <input type="color" id="memo_char_bubble_color_input" value="#FFFFFF" style="width: 50px;">
+                        <input type="text" id="memo_char_bubble_color_input_text" placeholder="#FFFFFF" value="#FFFFFF" readonly style="width: 100px;">
+                    </label>
+                    <label>
+                        페르소나 말풍선 색상:
+                        <input type="color" id="memo_user_bubble_color_input" value="#F0F0F0" style="width: 50px;">
+                        <input type="text" id="memo_user_bubble_color_input_text" placeholder="#F0F0F0" value="#F0F0F0" readonly style="width: 100px;">
+                    </label>
+                </div>
+                <script>
+                    // ⭐ 수정: 렉 방지를 위해 onSettingChange 호출 로직을 index.js의 'change' 이벤트로 위임하고, 여기서는 텍스트 업데이트만 담당합니다.
+                    document.getElementById('memo_char_bubble_color_input').addEventListener('input', function() {
+                        document.getElementById('memo_char_bubble_color_input_text').value = this.value.toUpperCase();
+                    });
+                    document.getElementById('memo_user_bubble_color_input').addEventListener('input', function() {
+                        document.getElementById('memo_user_bubble_color_input_text').value = this.value.toUpperCase();
+                    });
+                </script>
+                
+                <hr class="sysHR">
+                
+                <label>
+                    캐릭터 대사 1:
+                    <input type="text" id="memo_global_char_bubble_1" class="memo-global-char-bubble-input" placeholder="전역 캐릭터 말풍선 1">
+                </label>
+                <label>
+                    캐릭터 대사 2:
+                    <input type="text" id="memo_global_char_bubble_2" class="memo-global-char-bubble-input" placeholder="전역 캐릭터 말풍선 2">
+                </label>
+                <label>
+                    캐릭터 대사 3:
+                    <input type="text" id="memo_global_char_bubble_3" class="memo-global-char-bubble-input" placeholder="전역 캐릭터 말풍선 3">
+                </label>
+                <hr style="margin-top: 10px; margin-bottom: 10px;">
+                <label>
+                    페르소나 대사 1:
+                    <input type="text" id="memo_global_user_bubble_1" class="memo-global-user-bubble-input" placeholder="전역 페르소나 말풍선 1">
+                </label>
+                <label>
+                    페르소나 대사 2:
+                    <input type="text" id="memo_global_user_bubble_2" class="memo-global-user-bubble-input" placeholder="전역 페르소나 말풍선 2">
+                </label>
+                <label>
+                    페르소나 대사 3:
+                    <input type="text" id="memo_global_user_bubble_3" class="memo-global-user-bubble-input" placeholder="전역 페르소나 말풍선 3">
+                </label>
+                
+                <div class="button-row" style="margin-top: 15px;">
+                    <button id="memo_reset_bubbles_btn" class="menu_button red_button">전역 말풍선 초기화</button>
+                </div>
+            </div>
+
+            <hr class="sysHR">
+
+            <div class="inline-drawer">
+                <div class="inline-drawer-toggle inline-drawer-header">
+                    <b id="memo_individual_bubbles_drawer_title">캐릭터 개별 설정 오버라이드</b>
+                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                </div>
+                
+                <div class="inline-drawer-content">
+                    <div class="menu-section">
+                        <h4>프로필 이미지 덮어쓰기</h4>
+                        <p class="memo-hint">입력 시 이 캐릭터에 한해서 이 이미지가 적용됩니다.</p>
+                        <label>
+                            캐릭터 이미지 URL:
+                            <input type="text" id="memo_char_image_override" placeholder="이미지 URL (캐릭터)">
+                        </label>
+                    </div>
+                    
+                    <hr style="margin-top: 10px; margin-bottom: 10px;">
+
+                    <div class="menu-section">
+                        <h4>페르소나 이미지 덮어쓰기:</h4>
+                        <p class="memo-hint">캐릭터에 고정되는 설정입니다</p>
+                        <label>
+                            페르소나 이미지 URL:
+                            <input type="text" id="memo_user_image_override" placeholder="이미지 URL (페르소나)">
+                        </label>
+                    </div>
+
+                    <hr style="margin-top: 10px; margin-bottom: 10px;">
+
+                    <div class="menu-section">
+                        <h4>개별 캐릭터 말풍선 대사</h4>
+                        <p class="memo-hint">내용이 하나라도 있을 경우, 위의 전역 설정을 덮어쓰고 이 대사가 적용됩니다.</p>
+                        <label>
+                            캐릭터 대사 1:
+                            <input type="text" id="memo_char_bubble_1" class="memo-char-bubble-input" placeholder="개별 캐릭터 말풍선 1">
+                        </label>
+                        <label>
+                            캐릭터 대사 2:
+                            <input type="text" id="memo_char_bubble_2" class="memo-char-bubble-input" placeholder="개별 캐릭터 말풍선 2">
+                        </label>
+                        <label>
+                            캐릭터 대사 3:
+                            <input type="text" id="memo_char_bubble_3" class="memo-char-bubble-input" placeholder="개별 캐릭터 말풍선 3">
+                        </label>
+                        <hr style="margin-top: 10px; margin-bottom: 10px;">
+                        <label>
+                            페르소나 대사 1:
+                            <input type="text" id="memo_user_char_bubble_1" class="memo-user-char-bubble-input" placeholder="개별 페르소나 말풍선 1">
+                        </label>
+                        <label>
+                            페르소나 대사 2:
+                            <input type="text" id="memo_user_char_bubble_2" class="memo-user-char-bubble-input" placeholder="개별 페르소나 말풍선 2">
+                        </label>
+                        <label>
+                            페르소나 대사 3:
+                            <input type="text" id="memo_user_char_bubble_3" class="memo-user-char-bubble-input" placeholder="개별 페르소나 말풍선 3">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="sysHR">
+
+            <div class="menu-section">
+                <h3>캐릭터별 메모 관리</h3>
+                <p class="memo-hint">저장된 메모가 있는 캐릭터 목록입니다. 메모를 삭제할 수 있습니다.</p>
+                <div id="memo_char_list_container" class="scrollable-list">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== popupmemo-settings 스타일 (파스텔톤 + 여백 강화 + 버튼 리디자인) ===== */
+.popupmemo-settings {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    color: #444;
+}
+
+.popupmemo-settings .control-group + .sysHR + .menu-section {
+    margin-top: 20px; /* 원하는 간격 */
+}
+
+
+/* 상단 헤더 */
+.popupmemo-settings .inline-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: #f4f6fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+}
+.popupmemo-settings .inline-drawer-header:hover {
+    background: #e9edf6;
+}
+.popupmemo-settings .inline-drawer-header b {
+    color: #6b82d8;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+.popupmemo-settings .inline-drawer-icon {
+    color: #6b82d8;
+    transition: transform 0.3s ease;
+}
+
+/* 본문 컨텐츠 */
+.popupmemo-settings .inline-drawer-content {
+    background: #ffffff;
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    padding: 24px;
+    margin-top: 10px;
+}
+/* ⭐ 추가: 개별 설정 Drawer의 컨텐츠 스타일 (여백 조절) */
+#memo_individual_bubbles_drawer .inline-drawer-content {
+    padding: 15px 24px;
+}
+
+
+/* 섹션 간격 */
+.popupmemo-settings .menu-section {
+    margin-bottom: 28px;
+}
+.popupmemo-settings .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* 구분선 */
+.popupmemo-settings .sysHR {
+    border: none;
+    border-top: 1px dashed #dcdcdc;
+    margin: 26px 0;
+}
+
+/* 섹션 제목 */
+.popupmemo-settings .menu-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #7d92cc;
+    margin-bottom: 16px;
+    padding-left: 10px;
+    position: relative;
+}
+.popupmemo-settings .menu-section h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 18px;
+    background-color: #a9b9e8;
+    border-radius: 3px;
+}
+
+/* 입력 필드 */
+.popupmemo-settings input[type="text"],
+.popupmemo-settings input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d7dbea;
+    border-radius: 8px;
+    background: #fafbff;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.popupmemo-settings input[type="text"]:focus,
+.popupmemo-settings input[type="number"]:focus {
+    border-color: #b5c4f0;
+    box-shadow: 0 0 0 2px rgba(173, 192, 255, 0.2);
+    outline: none;
+}
+
+/* 버튼 라인 */
+.popupmemo-settings .button-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+.popupmemo-settings .button-row button {
+    flex: 1;
+}
+
+/* 버튼 디자인 */
+.popupmemo-settings .menu_button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 파스텔 블루 버튼 */
+.popupmemo-settings .menu_button.blue_button {
+    background: #c9d5fa;
+    color: #4154a2;
+}
+.popupmemo-settings .menu_button.blue_button:hover {
+    background: #b8c6f4;
+    box-shadow: 0 3px 8px rgba(100, 120, 200, 0.25);
+    transform: translateY(-1px);
+}
+
+/* 파스텔 레드 버튼 */
+.popupmemo-settings .menu_button.red_button {
+    background: #f4c9c9;
+    color: #a24141;
+}
+.popupmemo-settings .menu_button.red_button:hover {
+    background: #f0b5b5;
+    box-shadow: 0 3px 8px rgba(200, 100, 100, 0.25);
+    transform: translateY(-1px);
+}
+
+.popupmemo-settings .memo-hint {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+/* 메모 목록 컨테이너 스타일 */
+.popupmemo-settings .scrollable-list {
+    max-height: 250px; /* 최대 높이 제한 */
+    overflow-y: auto; /* 세로 스크롤 허용 */
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f7f7f7;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 메모 항목 스타일 */
+.memo-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    font-size: 0.9rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.memo-list-item-content {
+    flex-grow: 1;
+    margin-right: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.memo-delete-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.memo-delete-btn:hover {
+    background: #c0392b;
+}
+
+
+</style>
