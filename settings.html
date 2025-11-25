@@ -51,7 +51,6 @@
                     </label>
                 </div>
                 <script>
-                    // ⭐ 수정: 렉 방지를 위해 onSettingChange 호출 로직을 index.js의 'change' 이벤트로 위임하고, 여기서는 텍스트 업데이트만 담당합니다.
                     document.getElementById('memo_char_bubble_color_input').addEventListener('input', function() {
                         document.getElementById('memo_char_bubble_color_input_text').value = this.value.toUpperCase();
                     });
@@ -160,7 +159,7 @@
 
             <div class="menu-section">
                 <h3>캐릭터별 메모 관리</h3>
-                <p class="memo-hint">저장된 메모가 있는 캐릭터 목록입니다. 메모를 삭제할 수 있습니다.</p>
+                <p class="memo-hint">저장된 메모 목록입니다. 잘못 연결된 데이터는 이동 버튼을 눌러 현재 캐릭터로 가져올 수 있습니다.</p>
                 <div id="memo_char_list_container" class="scrollable-list">
                     </div>
             </div>
@@ -169,16 +168,15 @@
 </div>
 
 <style>
-/* ===== popupmemo-settings 스타일 (파스텔톤 + 여백 강화 + 버튼 리디자인) ===== */
+/* ===== popupmemo-settings 스타일 ===== */
 .popupmemo-settings {
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
     color: #444;
 }
 
 .popupmemo-settings .control-group + .sysHR + .menu-section {
-    margin-top: 20px; /* 원하는 간격 */
+    margin-top: 20px; 
 }
-
 
 /* 상단 헤더 */
 .popupmemo-settings .inline-drawer-header {
@@ -212,11 +210,9 @@
     padding: 24px;
     margin-top: 10px;
 }
-/* ⭐ 추가: 개별 설정 Drawer의 컨텐츠 스타일 (여백 조절) */
 #memo_individual_bubbles_drawer .inline-drawer-content {
     padding: 15px 24px;
 }
-
 
 /* 섹션 간격 */
 .popupmemo-settings .menu-section {
@@ -267,7 +263,6 @@
     font-size: 0.9rem;
     transition: all 0.2s ease;
 }
-
 .popupmemo-settings input[type="text"]:focus,
 .popupmemo-settings input[type="number"]:focus {
     border-color: #b5c4f0;
@@ -297,88 +292,4 @@
     transition: all 0.25s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
-
-/* 파스텔 블루 버튼 */
-.popupmemo-settings .menu_button.blue_button {
-    background: #c9d5fa;
-    color: #4154a2;
-}
-.popupmemo-settings .menu_button.blue_button:hover {
-    background: #b8c6f4;
-    box-shadow: 0 3px 8px rgba(100, 120, 200, 0.25);
-    transform: translateY(-1px);
-}
-
-/* 파스텔 레드 버튼 */
-.popupmemo-settings .menu_button.red_button {
-    background: #f4c9c9;
-    color: #a24141;
-}
-.popupmemo-settings .menu_button.red_button:hover {
-    background: #f0b5b5;
-    box-shadow: 0 3px 8px rgba(200, 100, 100, 0.25);
-    transform: translateY(-1px);
-}
-
-.popupmemo-settings .memo-hint {
-    font-size: 0.85rem;
-    color: #777;
-    margin-top: 5px;
-    margin-bottom: 10px;
-}
-
-/* 메모 목록 컨테이너 스타일 */
-.popupmemo-settings .scrollable-list {
-    max-height: 250px; /* 최대 높이 제한 */
-    overflow-y: auto; /* 세로 스크롤 허용 */
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background: #f7f7f7;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* 메모 항목 스타일 */
-.memo-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    background: #fff;
-    border-radius: 6px;
-    border: 1px solid #eee;
-    font-size: 0.9rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.memo-list-item-content {
-    flex-grow: 1;
-    margin-right: 10px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.memo-delete-btn {
-    background: #e74c3c;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: background 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.memo-delete-btn:hover {
-    background: #c0392b;
-}
-
-
-</style>
+.popupmemo-settings .menu_
