@@ -440,3 +440,39 @@
 .memo-btn-group button i.fa-solid {
     color: #fff !important;
 }
+
+/* =========================================
+   3. 모바일 전용 스타일 (#chat 영역 맞춤)
+   ========================================= */
+@media screen and (max-width: 768px) {
+    #popup-memo-container {
+        /* 위치는 JS에서 #chat 좌표를 받아오므로 fixed만 유지 */
+        position: fixed !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        
+        /* 너비는 화면 꽉 차게 (여백 약간) */
+        width: 98% !important;
+        
+        /* 높이는 JS가 제어하므로 제한 해제 */
+        min-height: unset !important;
+        max-height: unset !important;
+        
+        /* 모바일 편의성 */
+        resize: none !important; 
+        font-size: 16px; 
+        border-radius: 8px; /* 모서리 둥글기 약간 줄임 */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 2000 !important; /* 대화창보다 확실히 위에 뜨도록 */
+    }
+
+    #popup-memo-textarea {
+        font-size: 16px; 
+        height: 100% !important; /* 컨테이너 높이에 맞춰 늘어남 */
+    }
+    
+    #memo-header {
+        cursor: default !important;
+        padding: 8px 10px; /* 공간 확보를 위해 패딩 약간 축소 */
+    }
+}

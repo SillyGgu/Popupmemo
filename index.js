@@ -28,6 +28,7 @@ let userCurrentBubbleIndex = 0;
 
 const DEFAULT_SETTINGS = {
     enabled: true,
+    showWandButton: true,
     ignoreClick: false,
     
     pos: { top: 50, left: 50 },
@@ -46,7 +47,7 @@ const DEFAULT_SETTINGS = {
 };
 let settings;
 
-// 안전한 알림 함수 (toastr가 없어도 에러 안 나게 처리)
+// 안전한 알림 함수
 function showToast(type, message) {
     if (window.toastr && typeof window.toastr[type] === 'function') {
         window.toastr[type](message);
@@ -55,8 +56,68 @@ function showToast(type, message) {
     }
 }
 
+async function addToWandMenu() {
+    try {
+        if ($('#popupmemo_wand_button').length > 0) return;
+
+        const buttonHtml = await $.get(`${extensionFolderPath}/button.html`);
+        const extensionsMenu = $("#extensionsMenu");
+        
+        if (extensionsMenu.length > 0) {
+            extensionsMenu.append(buttonHtml);
+            $("#popupmemo_wand_button").on("click", function() {
+                toggleMemoEnabled();
+            });
+            updateWandMenuVisibility();
+            updateWandButtonStatus();
+        } else {
+            setTimeout(addToWandMenu, 1000);
+        }
+    } catch (error) {
+        console.warn('[PopupMemo] Failed to add wand button:', error);
+    }
+}
+
+function updateWandMenuVisibility() {
+    if (settings.showWandButton) {
+        $("#popupmemo_wand_button").show();
+    } else {
+        $("#popupmemo_wand_button").hide();
+    }
+}
+
+function updateWandButtonStatus() {
+    const $statusIcon = $("#popupmemo_status_icon");
+    const $mainIcon = $("#popupmemo_wand_button .extensionsMenuExtensionButton");
+    
+    if ($statusIcon.length > 0) {
+        if (settings.enabled) {
+            $statusIcon.removeClass("fa-toggle-off").addClass("fa-toggle-on");
+            $statusIcon.css("color", "#4CAF50");
+            $statusIcon.css("opacity", "1");
+            $mainIcon.css("opacity", "1");
+        } else {
+            $statusIcon.removeClass("fa-toggle-on").addClass("fa-toggle-off");
+            $statusIcon.css("color", "#888");
+            $statusIcon.css("opacity", "0.5");
+            $mainIcon.css("opacity", "0.5");
+        }
+    }
+}
+
+function toggleMemoEnabled() {
+    settings.enabled = !settings.enabled;
+    const $toggleCheckbox = $('#memo_enable_toggle');
+    if ($toggleCheckbox.length > 0) {
+        $toggleCheckbox.prop('checked', settings.enabled);
+    }
+    applySettings();
+    saveSettingsDebounced();
+    const msg = settings.enabled ? '팝업 메모장이 활성화되었습니다.' : '팝업 메모장이 비활성화되었습니다.';
+    showToast('info', msg);
+}
+
 function createMemoPopup() {
-    // 이미 존재하면 삭제 후 재생성 (중복 방지)
     $('#popup-memo-container').remove();
 
     const memoHTML = `
@@ -74,7 +135,7 @@ function createMemoPopup() {
                     </button>
                 </div>
             </div>
-            <textarea id="popup-memo-textarea" placeholder="여기에 메모를 작성하세요. 내용은 캐릭터별로 자동 저장됩니다."></textarea>
+            <textarea id="popup-memo-textarea" placeholder="메모를 작성하세요."></textarea>
             
             <div id="memo-user-area">
                 <div id="memo-user-bubble-display" class="speech-bubble-container user-speech-bubble-container">
@@ -92,18 +153,28 @@ function createMemoPopup() {
     $('#memo-toggle-ignore').on('click', toggleIgnoreClick);
     $memoTextarea.on('input', saveMemoContentDebounced);
 
+    // 드래그 기능 연결 (PC 마우스 전용)
     bindDragFunctionality($memoContainer);
 
     $memoTextarea.on('mousedown', (e) => e.stopPropagation());
 
     $memoContainer.on('mouseup', function() {
-        const currentWidth = $memoContainer.width();
-        const currentHeight = $memoContainer.height();
+        if (window.innerWidth > 768) {
+            const currentWidth = $memoContainer.width();
+            const currentHeight = $memoContainer.height();
 
-        if (settings.width !== currentWidth || settings.height !== currentHeight) {
-            settings.width = currentWidth;
-            settings.height = currentHeight;
-            saveSettingsDebounced();
+            if (settings.width !== currentWidth || settings.height !== currentHeight) {
+                settings.width = currentWidth;
+                settings.height = currentHeight;
+                saveSettingsDebounced();
+            }
+        }
+    });
+    
+    // 화면 리사이즈나 회전 시 위치 재조정 (모바일 대응)
+    $(window).on('resize', function() {
+        if (settings.enabled && window.innerWidth <= 768) {
+            applySettings();
         }
     });
     
@@ -112,58 +183,73 @@ function createMemoPopup() {
 
 function bindDragFunctionality($element) {
     let isDragging = false;
-    let offsetX, offsetY;
+    let startX, startY;
+    let initialLeft, initialTop;
     const container = $element[0];
 
-    if (!container) return; // 요소가 없으면 중단
+    if (!container) return;
 
-    $element.on('mousedown', (e) => {
-        if ($(e.target).is('#memo-char-avatar') || $(e.target).is('#memo-user-avatar')) {
-            return;
-        }
+    function onDragStart(e) {
+        // 모바일(화면 폭 768px 이하)이면 드래그 아예 시작 안 함
+        if (window.innerWidth <= 768) return;
+
+        if ($(e.target).is('#memo-char-avatar') || $(e.target).is('#memo-user-avatar')) return;
         
         const rect = container.getBoundingClientRect();
-        const isResizeHandle = (e.clientX > rect.right - 10 && e.clientY > rect.bottom - 10);
+        const isResizeHandle = (e.clientX > rect.right - 15 && e.clientY > rect.bottom - 15);
 
         if ($(e.target).closest('#memo-controls-area').length || $(e.target).is('#popup-memo-textarea') || isResizeHandle) {
             return;
         }
 
         isDragging = true;
-        offsetX = e.clientX - container.getBoundingClientRect().left;
-        offsetY = e.clientY - container.getBoundingClientRect().top;
         $element.addClass('grabbing');
-    });
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = container.offsetLeft;
+        initialTop = container.offsetTop;
+    }
 
-    $(document).on('mousemove', (e) => {
+    function onDragMove(e) {
         if (!isDragging) return;
 
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
+        let deltaX = e.clientX - startX;
+        let deltaY = e.clientY - startY;
 
-        // 화면 밖으로 완전히 나가는 것 방지
-        newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - 50));
-        newTop = Math.max(0, Math.min(newTop, window.innerHeight - 50));
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        const maxLeft = window.innerWidth - 50;
+        const maxTop = window.innerHeight - 50;
+
+        newLeft = Math.max(-100, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
 
         container.style.left = `${newLeft}px`;
         container.style.top = `${newTop}px`;
 
         settings.pos.left = newLeft;
         settings.pos.top = newTop;
-        saveSettingsDebounced();
-    });
+    }
 
-    $(document).on('mouseup', () => {
+    function onDragEnd() {
         if (isDragging) {
             isDragging = false;
             $element.removeClass('grabbing');
+            saveSettingsDebounced();
         }
-    });
+    }
+
+    // 마우스 이벤트만 바인딩
+    $element.on('mousedown', onDragStart);
+    $(document).on('mousemove', onDragMove);
+    $(document).on('mouseup', onDragEnd);
 }
 
 function getCurrentCharData() {
     const charId = this_chid || 'no_char_selected'; 
-    if (!settings.charData) settings.charData = {}; // 방어 코드
+    if (!settings.charData) settings.charData = {}; 
 
     if (!settings.charData[charId]) {
         settings.charData[charId] = {
@@ -188,22 +274,51 @@ function applySettings() {
     const $toggleBtn = $('#memo-toggle-ignore');
     const charData = getCurrentCharData();
 
-    if ($memoContainer.length === 0) return; // 컨테이너가 없으면 중단
+    updateWandButtonStatus();
 
-    $memoContainer.toggle(!!settings.enabled); // boolean으로 강제 변환하여 토글
+    if ($memoContainer.length === 0) return;
 
-    // 위치값 유효성 검사 및 복구
+    $memoContainer.toggle(!!settings.enabled);
+
+    const isMobile = window.innerWidth <= 768;
+
     if (!settings.pos || isNaN(settings.pos.top) || isNaN(settings.pos.left)) {
-        console.log('[PopupMemo] 위치 설정이 잘못되어 초기화합니다.');
         settings.pos = { top: 50, left: 50 };
     }
 
-    $memoContainer.css({
-        top: `${settings.pos.top}px`,
-        left: `${settings.pos.left}px`,
-        width: `${settings.width}px`,
-        height: `${settings.height}px`,
-    });
+    // [핵심 로직] 모바일이면 #chat 태그의 크기와 위치를 가져와서 적용
+    if (isMobile) {
+        const $chat = $('#chat');
+        if ($chat.length > 0) {
+            // #chat 요소의 정확한 화면상 좌표와 크기 계산
+            const rect = $chat[0].getBoundingClientRect();
+            
+            $memoContainer.css({
+                'top': rect.top + 'px',       // #chat의 상단 위치 (탑바 바로 아래)
+                'height': rect.height + 'px', // #chat의 높이 (입력창 바로 위까지)
+                'left': '50%',                // CSS에서 transform으로 중앙 정렬
+                'width': '98%',               // 화면 꽉 차게
+                'min-width': 'unset',
+                'min-height': 'unset'
+            });
+        } else {
+            // 만약 #chat을 못 찾을 경우 안전 장치 (화면 전체 사용)
+            $memoContainer.css({
+                'top': '50px',
+                'height': 'calc(100vh - 150px)',
+                'left': '50%'
+            });
+        }
+    } else {
+        // PC 모드일 때: 저장된 좌표 사용
+        $memoContainer.css({
+            top: `${settings.pos.top}px`,
+            left: `${settings.pos.left}px`,
+            width: `${settings.width}px`,
+            height: `${settings.height}px`,
+            'transform': 'none' // 모바일용 중앙정렬 해제
+        });
+    }
 
     $memoTextarea.val(charData.memoContent); 
     
@@ -283,7 +398,6 @@ function startBubbleRotation(bubbles, contentSelector, timerRef, indexRef) {
         clearInterval(timerRef);
     }
     
-    // bubbles가 undefined이거나 배열이 아닐 경우 방어
     if (!Array.isArray(bubbles)) return { timer: null, index: 0 };
 
     const validBubbles = bubbles.filter(b => b && b.trim() !== '');
@@ -403,13 +517,11 @@ function renderCharMemoList() {
         $container.append(listItem);
     });
     
-    // 이벤트 바인딩
     $('.memo-copy-btn').off('click').on('click', copyCharMemo);
     $('.memo-migrate-btn').off('click').on('click', migrateCharMemo);
     $('.memo-delete-btn').off('click').on('click', deleteCharMemo);
 }
 
-// 메모 복사 기능
 function copyCharMemo(e) {
     const charId = $(e.currentTarget).data('charId');
     const data = settings.charData[charId];
@@ -428,7 +540,6 @@ function copyCharMemo(e) {
     }
 }
 
-// 데이터 ID 변경 (이동) 기능
 function migrateCharMemo(e) {
     const oldCharId = $(e.currentTarget).data('charId');
     const oldCharName = $(e.currentTarget).closest('.memo-list-item').find('b').text();
@@ -446,17 +557,12 @@ function migrateCharMemo(e) {
     const currentName = characters[this_chid] ? characters[this_chid].name : '현재 캐릭터';
 
     if (confirm(`'${oldCharName}'의 메모 데이터를 현재 캐릭터('${currentName}')로 이동하시겠습니까?\n\n주의: 현재 캐릭터의 기존 메모가 있다면 덮어씌워집니다.`)) {
-        
-        // 데이터 깊은 복사
         settings.charData[this_chid] = JSON.parse(JSON.stringify(settings.charData[oldCharId]));
-        
-        // 기존(잘못된 ID) 데이터 삭제
         delete settings.charData[oldCharId];
         
         saveSettingsDebounced();
         applySettings();
-        loadSettingsToUI(); // UI 갱신 (리스트 포함)
-        
+        loadSettingsToUI();
         showToast('success', `데이터가 '${currentName}'에게로 이동되었습니다.`);
     }
 }
@@ -467,11 +573,9 @@ function deleteCharMemo(e) {
     
     if (confirm(`정말로 '${charName}' 캐릭터의 메모와 모든 설정을 삭제하시겠습니까?`)) {
         delete settings.charData[charIdToDelete];
-        
         if (this_chid === charIdToDelete) {
             $('#popup-memo-textarea').val('');
         }
-        
         saveSettingsDebounced();
         renderCharMemoList();
         applySettings();
@@ -482,6 +586,8 @@ function onSettingChange() {
     const charData = getCurrentCharData();
     
     settings.enabled = $('#memo_enable_toggle').prop('checked');
+    settings.showWandButton = $('#memo_show_wand_button').prop('checked');
+
     settings.bgOpacity = parseFloat($('#memo_bg_opacity_input').val()) || 0.7;
     settings.bgImage = $('#memo_bg_image_input').val().trim();
     
@@ -508,6 +614,8 @@ function onSettingChange() {
 
     charData.charImageOverride = $('#memo_char_image_override').val().trim();
     
+    updateWandMenuVisibility();
+
     applySettings();
     saveSettingsDebounced();
 }
@@ -519,6 +627,8 @@ function loadSettingsToUI() {
     const charName = charCard && charCard.name ? charCard.name : '캐릭터 미선택';
 
     $('#memo_enable_toggle').prop('checked', settings.enabled);
+    $('#memo_show_wand_button').prop('checked', settings.showWandButton);
+
     $('#memo_bg_opacity_input').val(settings.bgOpacity);
     $('#memo_bg_image_input').val(settings.bgImage);
     
@@ -559,35 +669,33 @@ function onCharacterChange() {
     applySettings(); 
 }
 
-// 메인 실행부
 (async function() {
     console.log('[PopupMemo] Extension loading...');
 
     try {
-        // 1. 설정 초기화
         settings = extension_settings.Popupmemo = extension_settings.Popupmemo || DEFAULT_SETTINGS;
         if (Object.keys(settings).length === 0) {
             settings = Object.assign(extension_settings.Popupmemo, DEFAULT_SETTINGS);
         }
         
-        // 기본값 보정
         if (!settings.charBubbles) settings.charBubbles = DEFAULT_SETTINGS.charBubbles;
         if (!settings.userBubbles) settings.userBubbles = DEFAULT_SETTINGS.userBubbles;
         if (!settings.charBubbleColor) settings.charBubbleColor = DEFAULT_SETTINGS.charBubbleColor;
         if (!settings.userBubbleColor) settings.userBubbleColor = DEFAULT_SETTINGS.userBubbleColor;
-        if (!settings.pos) settings.pos = { top: 50, left: 50 }; // 위치 초기화
+        if (!settings.pos) settings.pos = { top: 50, left: 50 }; 
+        if (settings.showWandButton === undefined) settings.showWandButton = true;
 
-        // 2. DOM 생성
         createMemoPopup();
         updateProfileImages();
-        
-        // 3. 설정 HTML 로드 (비동기)
+        addToWandMenu();
+
         try {
             const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
             $("#extensions_settings2").append(settingsHtml);
 
-            // 이벤트 바인딩
             $('#memo_enable_toggle, #memo_bg_opacity_input').on('change', onSettingChange);
+            $('#memo_show_wand_button').on('change', onSettingChange);
+
             $('#memo_char_bubble_color_input, #memo_user_bubble_color_input').on('change', onSettingChange); 
             
             $('.memo-global-char-bubble-input, .memo-global-user-bubble-input, .memo-char-bubble-input, .memo-user-char-bubble-input').on('input', onSettingChange); 
@@ -612,10 +720,8 @@ function onCharacterChange() {
             console.error(`[${extensionName}] Failed to load settings.html:`, error);
         }
 
-        // 4. 최종 적용
         applySettings();
 
-        // 5. 이벤트 리스너 등록
         eventSource.on(event_types.CHARACTER_SELECTED, onCharacterChange);
         eventSource.on(event_types.USER_AVATAR_UPDATED, updateProfileImages);
         
