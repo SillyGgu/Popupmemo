@@ -41,8 +41,10 @@
 
 # 확장 설정 미리보기
 
-\<br /\>
+<br /\>
 
 <img width="761" height="1537" alt="image" src="https://github.com/user-attachments/assets/7c16df15-f393-4e6a-ba6d-c51a9dc044e0" />
+
+<br /\>
 
 <img width="375" height="294" alt="image" src="https://github.com/user-attachments/assets/d4956702-c8fa-43dc-9cd2-33a11f6fea21" />
