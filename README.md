@@ -45,6 +45,22 @@
 
 <br />
 
+## 12.13 업데이트 사항
+
+<br />
+
+<img width="753" height="580" alt="image" src="https://github.com/user-attachments/assets/a5563be4-18de-477b-a909-3843c6d13648" />
+
+- ui의 개선
+- 백업 기능 추가
+- 챗 기준 메모 저장, 캐릭터 기준 메모 저장 방식으로 선택지 추가
+- 메모 저장 방식 개선 (업뎃 할때마다 꼬이던 문제 해결)
+
+<br />
+
+<br />
+
+
 # 확장 설정 미리보기
 
 <br />
