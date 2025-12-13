@@ -1,7 +1,6 @@
 /* =========================================
-   1. 팝업 메모장 본체 스타일 (이게 있어야 메모장이 보입니다)
+   1. 팝업 메모장 본체 스타일
    ========================================= */
-
 
 #popup-memo-container {
     position: fixed;
@@ -9,10 +8,10 @@
     left: 50px;
     width: 350px; 
     min-width: 280px; 
-    min-height: 200px; 
+    min-height: 250px; /* 높이 약간 확보 */
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    z-index: 1500; /* 다른 요소보다 위에 뜨도록 높임 */
+    z-index: 1500;
     cursor: grab;
     display: flex;
     flex-direction: column;
@@ -50,6 +49,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* 상단: 캐릭터 영역 */
 #memo-header {
     display: flex;
     justify-content: space-between;
@@ -65,45 +65,47 @@
     overflow: hidden;
 }
 
-#memo-char-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--accent-color, #EC407A);
-    flex-shrink: 0;
-    pointer-events: none; 
-}
-
+/* 하단: User 영역 (수정됨: 우측 정렬) */
 #memo-user-area {
     display: flex;
-    align-items: center;
-    justify-content: flex-end; 
+    justify-content: flex-end; /* 오른쪽 정렬 */
+    align-items: center;       /* 수직 중앙 정렬 */
     padding: 10px;
-    padding-top: 0;
     gap: 10px;
+    margin-top: auto;          /* 텍스트 영역 아래로 밀기 */
 }
 
-#memo-user-avatar {
+/* 아바타 공통 */
+#memo-char-avatar, #memo-user-avatar {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--accent-color, #3F51B5); 
+    box-sizing: border-box;
     flex-shrink: 0;
-    pointer-events: none;
+    pointer-events: none; 
+    transition: border-color 0.3s ease;
 }
 
+#memo-char-avatar {
+    border: 3px solid var(--char-bubble-color, #EC407A);
+}
+#memo-user-avatar {
+    border: 3px solid var(--user-bubble-color, #3F51B5); 
+}
+
+/* 말풍선 컨테이너 */
 .speech-bubble-container {
     position: relative; 
     padding: 8px 12px;
     border-radius: 10px;
     max-width: 100%;
-    margin: 0 10px;
+    margin: 0 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     overflow: visible; 
 }
 
+/* 캐릭터 말풍선 꼬리 (왼쪽) */
 #memo-bubble-display.speech-bubble-container:before {
     content: "";
     position: absolute;
@@ -119,6 +121,7 @@
     z-index: 1500;
 }
 
+/* User 말풍선 꼬리 (오른쪽) */
 #memo-user-bubble-display.speech-bubble-container:before {
     content: "";
     position: absolute;
@@ -143,10 +146,11 @@
     display: inline-block; 
 }
 
+/* 텍스트 입력 영역 */
 #popup-memo-textarea {
     flex-grow: 1;
     width: 100%;
-    padding: 10px 15px;
+    padding: 5px 15px;
     border: none;
     resize: none;
     outline: none;
@@ -155,7 +159,6 @@
     box-sizing: border-box;
     background-color: transparent; 
     color: #333;
-    margin-top: 5px; 
     pointer-events: auto !important; 
     cursor: text;
 }
@@ -163,15 +166,14 @@
     background-color: rgba(255, 255, 255, 0.1); 
 }
 
+/* 애니메이션 */
 .bubble-flicker-out .speech-bubble {
     opacity: 0 !important;
-    transform: translateY(0) rotateX(0deg); 
     transition: opacity 0.5s ease-in; 
 }
 
 .bubble-flicker-in .speech-bubble {
     opacity: 1 !important;
-    transform: translateY(0) rotateX(0deg);
     transition: opacity 0.8s ease-out; 
 }
 
@@ -202,13 +204,10 @@
 #memo-toggle-ignore .fa-hand-pointer {
     color: #F5F5F5 !important; 
 }
-#memo-toggle-ignore.active .fa-hand-pointer {
-    color: #F5F5F5 !important;
-}
 
 
 /* =========================================
-   2. 설정창(Settings) 및 리스트 스타일 (복사/이동 버튼 포함)
+   2. 설정창(Settings) 스타일
    ========================================= */
 .popupmemo-settings {
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
@@ -219,7 +218,6 @@
     margin-top: 20px; 
 }
 
-/* 상단 헤더 */
 .popupmemo-settings .inline-drawer-header {
     display: flex;
     justify-content: space-between;
@@ -243,7 +241,6 @@
     transition: transform 0.3s ease;
 }
 
-/* 본문 컨텐츠 */
 .popupmemo-settings .inline-drawer-content {
     background: #ffffff;
     border-radius: 0 0 14px 14px;
@@ -251,11 +248,7 @@
     padding: 24px;
     margin-top: 10px;
 }
-#memo_individual_bubbles_drawer .inline-drawer-content {
-    padding: 15px 24px;
-}
 
-/* 섹션 간격 */
 .popupmemo-settings .menu-section {
     margin-bottom: 28px;
 }
@@ -265,14 +258,12 @@
     gap: 14px;
 }
 
-/* 구분선 */
 .popupmemo-settings .sysHR {
     border: none;
     border-top: 1px dashed #dcdcdc;
     margin: 26px 0;
 }
 
-/* 섹션 제목 */
 .popupmemo-settings .menu-section h3 {
     font-size: 1rem;
     font-weight: 600;
@@ -293,7 +284,6 @@
     border-radius: 3px;
 }
 
-/* 입력 필드 */
 .popupmemo-settings input[type="text"],
 .popupmemo-settings input[type="number"] {
     width: 100%;
@@ -311,7 +301,7 @@
     outline: none;
 }
 
-/* 버튼 라인 */
+/* 버튼 스타일 (가로 정렬 문제 수정) */
 .popupmemo-settings .button-row {
     display: flex;
     gap: 12px;
@@ -319,9 +309,9 @@
 }
 .popupmemo-settings .button-row button {
     flex: 1;
+    white-space: nowrap; /* 글씨 줄바꿈 방지 */
 }
 
-/* 버튼 디자인 */
 .popupmemo-settings .menu_button {
     border: none;
     border-radius: 10px;
@@ -332,7 +322,11 @@
     font-size: 0.9rem;
     transition: all 0.25s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    width: auto; /* 버튼 내용에 맞게 너비 자동 조절 허용 */
+    min-width: 100px;
+    white-space: nowrap; /* 글씨 줄바꿈 방지 */
 }
+
 .popupmemo-settings .menu_button.blue_button {
     background: #c9d5fa;
     color: #4154a2;
@@ -359,7 +353,7 @@
     margin-bottom: 10px;
 }
 
-/* 메모 목록 컨테이너 스타일 */
+/* 메모 목록 스타일 */
 .popupmemo-settings .scrollable-list {
     max-height: 250px; 
     overflow-y: auto; 
@@ -372,7 +366,6 @@
     gap: 8px;
 }
 
-/* 메모 항목 스타일 */
 .memo-list-item {
     display: flex;
     justify-content: space-between;
@@ -393,13 +386,11 @@
     text-overflow: ellipsis;
 }
 
-/* 버튼 그룹 컨테이너 */
 .memo-btn-group {
     display: flex;
     gap: 5px;
 }
 
-/* 리스트 아이템 버튼 공통 */
 .memo-copy-btn, .memo-migrate-btn, .memo-delete-btn {
     border: none;
     border-radius: 4px;
@@ -413,66 +404,109 @@
     justify-content: center;
 }
 
-/* 복사 버튼 */
-.memo-copy-btn {
-    background: #6c5ce7;
-}
-.memo-copy-btn:hover {
-    background: #5b4cc4;
+.memo-copy-btn { background: #6c5ce7; }
+.memo-migrate-btn { background: #00b894; }
+.memo-delete-btn { background: #e74c3c; }
+
+/* 탭 네비게이션 스타일 (버그 수정용: 명시적 표시) */
+.popupmemo-nav-bar {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 20px;
+    gap: 10px;
 }
 
-/* 이동 버튼 */
-.memo-migrate-btn {
-    background: #00b894;
+.popupmemo-nav-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #888;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
 }
-.memo-migrate-btn:hover {
-    background: #00a182;
+.popupmemo-nav-item:hover {
+    color: #555;
+    background-color: rgba(0,0,0,0.02);
 }
-
-/* 삭제 버튼 */
-.memo-delete-btn {
-    background: #e74c3c;
-}
-.memo-delete-btn:hover {
-    background: #c0392b;
-}
-
-.memo-btn-group button i.fa-solid {
-    color: #fff !important;
+.popupmemo-nav-item.active {
+    color: #6b82d8;
+    border-bottom-color: #6b82d8;
 }
 
-/* =========================================
-   3. 모바일 전용 스타일 (#chat 영역 맞춤)
-   ========================================= */
+.popupmemo-tab-content {
+    display: none !important; /* 기본 숨김 */
+    animation: fadeIn 0.3s ease;
+}
+
+.popupmemo-tab-content.active {
+    display: block !important; /* 활성화 시 강제 표시 */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 토글 스위치 */
+.popupmemo-toggle-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.popupmemo-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+.popupmemo-switch input { opacity: 0; width: 0; height: 0; }
+.popupmemo-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+.popupmemo-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.popupmemo-switch input:checked + .popupmemo-slider { background-color: #6b82d8; }
+.popupmemo-switch input:checked + .popupmemo-slider:before { transform: translateX(22px); }
+.popupmemo-toggle-label { flex-grow: 1; font-weight: 500; cursor: pointer; }
+
+/* 모바일 전용 */
 @media screen and (max-width: 768px) {
     #popup-memo-container {
-        /* 위치는 JS에서 #chat 좌표를 받아오므로 fixed만 유지 */
         position: fixed !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        
-        /* 너비는 화면 꽉 차게 (여백 약간) */
         width: 98% !important;
-        
-        /* 높이는 JS가 제어하므로 제한 해제 */
         min-height: unset !important;
         max-height: unset !important;
-        
-        /* 모바일 편의성 */
         resize: none !important; 
         font-size: 16px; 
-        border-radius: 8px; /* 모서리 둥글기 약간 줄임 */
+        border-radius: 8px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        z-index: 2000 !important; /* 대화창보다 확실히 위에 뜨도록 */
+        z-index: 2000 !important;
     }
-
     #popup-memo-textarea {
         font-size: 16px; 
-        height: 100% !important; /* 컨테이너 높이에 맞춰 늘어남 */
+        height: 100% !important;
     }
-    
     #memo-header {
         cursor: default !important;
-        padding: 8px 10px; /* 공간 확보를 위해 패딩 약간 축소 */
+        padding: 8px 10px;
     }
 }
