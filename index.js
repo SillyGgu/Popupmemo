@@ -253,12 +253,22 @@ function bindDragFunctionality($element) {
     $(document).on('mouseup', onDragEnd);
 }
 
+function getCharacterKey(chid) {
+    if (chid === undefined || chid === null || chid === -1) return null;
+    const char = characters[chid];
+    if (!char) return null;
+    // 아바타 파일명을 고유 ID로 사용 (없으면 이름 사용)
+    return char.avatar || char.name;
+}
+
 function getCurrentCharData() {
-    const charId = this_chid || 'no_char_selected'; 
+    // this_chid(인덱스) 대신 고유 키(파일명)를 가져옴
+    const charKey = getCharacterKey(this_chid) || 'no_char_selected'; 
+    
     if (!settings.charData) settings.charData = {}; 
 
-    if (!settings.charData[charId]) {
-        settings.charData[charId] = {
+    if (!settings.charData[charKey]) {
+        settings.charData[charKey] = {
             memoContent: '', 
             charBubbles: ['', '', ''], 
             charImageOverride: '',
@@ -267,11 +277,11 @@ function getCurrentCharData() {
         };
     }
     
-    if (!settings.charData[charId].charBubbles) settings.charData[charId].charBubbles = ['', '', ''];
-    if (!settings.charData[charId].userCharBubbles) settings.charData[charId].userCharBubbles = ['', '', ''];
-    if (!settings.charData[charId].userImageOverride) settings.charData[charId].userImageOverride = ''; 
+    if (!settings.charData[charKey].charBubbles) settings.charData[charKey].charBubbles = ['', '', ''];
+    if (!settings.charData[charKey].userCharBubbles) settings.charData[charKey].userCharBubbles = ['', '', ''];
+    if (!settings.charData[charKey].userImageOverride) settings.charData[charKey].userImageOverride = ''; 
 
-    return settings.charData[charId];
+    return settings.charData[charKey];
 }
 
 function applySettings() {
@@ -496,8 +506,10 @@ const saveMemoContentDebounced = debounce(async () => {
     
     // 모드 1: 캐릭터 공용 저장소 사용 (ON)
     if (settings.useCharacterStorage) {
-        if (!this_chid) return; 
-        const charData = getCurrentCharData(); // 기존 charData 구조 사용
+        // 캐릭터가 선택되지 않았거나 키를 생성할 수 없으면 중단
+        if (this_chid === undefined || this_chid === -1) return;
+        
+        const charData = getCurrentCharData(); // 수정된 함수가 고유 키를 사용하여 데이터를 가져옴
         charData.memoContent = content;
         
         saveSettingsDebounced(); // settings.json에 저장
@@ -532,8 +544,8 @@ function renderCharMemoList() {
 
     // 데이터가 있는 항목만 필터링 (메모가 있거나 오버라이드 설정이 있는 경우)
     const charEntries = Object.entries(settings.charData)
-        .filter(([charId, data]) => {
-            return charId !== 'no_char_selected' && (
+        .filter(([charKey, data]) => {
+            return charKey !== 'no_char_selected' && (
                 (data.memoContent && data.memoContent.trim() !== '') || 
                 (data.charImageOverride || data.userImageOverride) ||
                 (data.charBubbles && data.charBubbles.some(b => b))
@@ -545,9 +557,11 @@ function renderCharMemoList() {
         return;
     }
 
-    charEntries.forEach(([charId, data]) => {
-        const charCard = characters[charId];
-        const charName = charCard && charCard.name ? charCard.name : `(삭제됨/알수없음: ${charId.substring(0, 6)}...)`;
+    charEntries.forEach(([charKey, data]) => {
+        // charKey는 이제 파일명이므로, characters 배열에서 avatar가 일치하는 캐릭터를 찾아야 함
+        const charCard = characters.find(c => c.avatar === charKey || c.name === charKey);
+        // 캐릭터가 존재하면 이름을, 없으면 파일명을 표시
+        const charName = charCard ? charCard.name : `(미설치/삭제됨: ${charKey})`;
         
         let memoPreview = '(메모 없음)';
         if (data.memoContent && data.memoContent.trim() !== '') {
@@ -558,19 +572,19 @@ function renderCharMemoList() {
         }
 
         const listItem = `
-            <div class="memo-list-item" data-char-id="${charId}" style="border-left: 4px solid #6b82d8;">
+            <div class="memo-list-item" data-char-key="${charKey}" style="border-left: 4px solid #6b82d8;">
                 <div class="memo-list-item-content">
                     <div style="font-weight:bold; color:#555;">${charName}</div>
                     <div style="font-size:0.85em; color:#777; margin-top:2px;">${memoPreview}</div>
                 </div>
                 <div class="memo-btn-group">
-                    <button class="memo-copy-btn" data-char-id="${charId}" title="메모 복사">
+                    <button class="memo-copy-btn" data-char-key="${charKey}" title="메모 복사">
                         <i class="fa-solid fa-copy"></i>
                     </button>
-                    <button class="memo-migrate-btn" data-char-id="${charId}" title="현재 채팅으로 가져오기">
+                    <button class="memo-migrate-btn" data-char-key="${charKey}" title="현재 채팅으로 가져오기">
                         <i class="fa-solid fa-file-import"></i>
                     </button>
-                    <button class="memo-delete-btn" data-char-id="${charId}" title="데이터 완전 삭제">
+                    <button class="memo-delete-btn" data-char-key="${charKey}" title="데이터 완전 삭제">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -579,15 +593,15 @@ function renderCharMemoList() {
         $container.append(listItem);
     });
     
-    // 이벤트 바인딩
+    // 이벤트 바인딩 (data 속성 이름이 charId -> charKey로 변경됨에 유의)
     $('.memo-copy-btn').off('click').on('click', copyCharMemo);
     $('.memo-migrate-btn').off('click').on('click', migrateCharMemo);
     $('.memo-delete-btn').off('click').on('click', deleteCharMemo);
 }
 
 function copyCharMemo(e) {
-    const charId = $(e.currentTarget).data('charId');
-    const data = settings.charData[charId];
+    const charKey = $(e.currentTarget).data('charKey');
+    const data = settings.charData[charKey];
     
     if (data && data.memoContent) {
         if (navigator.clipboard) {
@@ -604,62 +618,94 @@ function copyCharMemo(e) {
 }
 
 async function migrateCharMemo(e) {
-    const oldCharId = $(e.currentTarget).data('charId');
-    const oldCharName = $(e.currentTarget).closest('.memo-list-item').find('b').text();
+    const oldCharKey = $(e.currentTarget).data('charKey');
     
-    // 1. 현재 채팅 컨텍스트 확인
-    const context = getContext();
-    if (!context.chat || context.chat.length === 0) {
-        showToast('warning', '메모를 이동할 활성화된 채팅이 없습니다.');
+    // UI에서 보여지는 이름 가져오기 (안전 처리)
+    const $itemDiv = $(e.currentTarget).closest('.memo-list-item');
+    const displayName = $itemDiv.find('.memo-list-item-content > div:first-child').text() || '대상 캐릭터';
+
+    // 1. 가져올 데이터 원본 확인
+    const sourceData = settings.charData[oldCharKey];
+    const contentToMigrate = sourceData ? sourceData.memoContent : '';
+
+    if (!contentToMigrate) {
+        showToast('error', '이동할 데이터가 비어있습니다.');
         return;
     }
 
-    // 2. 현재 캐릭터 ID 확인 (this_chid는 전역 변수)
-    // 주의: 그룹 채팅 등에서는 this_chid가 모호할 수 있으나, 싱글 채팅 기준
-    const currentName = characters[this_chid] ? characters[this_chid].name : '현재 캐릭터';
+    // 2. 사용자 확인
+    if (!confirm(`'${displayName}'의 데이터를 현재 화면으로 가져오시겠습니까?\n\n주의: 현재 입력창의 내용은 덮어씌워집니다.`)) {
+        return;
+    }
 
-    // 3. 사용자 확인
-    if (confirm(`'${oldCharName}'의 보관된 데이터를 현재 보고 있는 채팅으로 가져오시겠습니까?\n\n주의: 현재 채팅창에 작성된 메모가 있다면 덮어씌워집니다.`)) {
+    // 3. [핵심 수정] 현재 활성화된 저장 모드에 따라 목적지 결정
+    if (settings.useCharacterStorage) {
+        // [CASE A] 글로벌 저장소 모드 사용 중 (Settings.json에 저장해야 함)
+        // 현재 캐릭터의 올바른 키(파일명)를 가져옴
+        const currentCharKey = getCharacterKey(this_chid);
         
-        // 4. 가져올 데이터 추출
-        const sourceData = settings.charData[oldCharId];
-        const contentToMigrate = sourceData ? sourceData.memoContent : '';
-
-        if (!contentToMigrate) {
-            showToast('error', '이동할 데이터가 비어있습니다.');
+        if (!currentCharKey) {
+            showToast('error', '현재 선택된 캐릭터를 식별할 수 없습니다.');
             return;
         }
 
-        // 5. [핵심] 현재 채팅 메타데이터에 주입
+        // 데이터 구조가 없으면 생성 (getCurrentCharData 로직 활용 가능하나 명시적으로 처리)
+        if (!settings.charData[currentCharKey]) {
+            getCurrentCharData(); 
+        }
+
+        // 새로운 키 위치에 내용 주입
+        settings.charData[currentCharKey].memoContent = contentToMigrate;
+        
+        // *중요*: 글로벌 모드에서는 saveChat이 아니라 saveSettings가 필요함
+        // (아래 공통 로직에서 saveSettingsDebounced가 호출됨)
+
+    } else {
+        // [CASE B] 채팅별 개별 저장 모드 사용 중 (Chat 파일에 저장해야 함)
+        const context = getContext();
+        if (!context.chat || context.chat.length === 0) {
+            showToast('warning', '메모를 저장할 활성화된 채팅이 없습니다.');
+            return;
+        }
+
         if (!context.chat[0].extra) context.chat[0].extra = {};
         context.chat[0].extra.popupmemo_content = contentToMigrate;
 
-        // 6. UI 즉시 갱신 (텍스트박스에 바로 보여주기)
-        $('#popup-memo-textarea').val(contentToMigrate);
-
-        // 7. 채팅 파일 저장
+        // 채팅 파일 저장
         await saveChat();
-
-        // 8. 기존 리스트(Settings)에서 데이터 삭제 (더 이상 전역 설정에 남길 필요 없음)
-        delete settings.charData[oldCharId];
-        saveSettingsDebounced();
-
-        // 9. 리스트 UI 갱신 (이동된 항목은 사라짐)
-        renderCharMemoList();
-        
-        showToast('success', `데이터가 현재 채팅으로 이동되었습니다.`);
     }
+
+    // 4. UI 즉시 갱신 (텍스트박스에 바로 보여주기)
+    $('#popup-memo-textarea').val(contentToMigrate);
+
+    // 5. 기존(과거) 데이터 삭제
+    delete settings.charData[oldCharKey];
+
+    // 6. 설정 저장 (삭제된 내용 반영 및 글로벌 모드일 경우 변경된 내용 저장)
+    saveSettingsDebounced();
+
+    // 7. 리스트 UI 갱신 (이동된 항목 사라짐)
+    renderCharMemoList();
+    
+    showToast('success', `데이터가 성공적으로 이동되었습니다.`);
 }
 
 function deleteCharMemo(e) {
-    const charIdToDelete = $(e.currentTarget).data('charId');
-    const charName = $(e.currentTarget).closest('.memo-list-item').find('b').text();
+    const charKeyToDelete = $(e.currentTarget).data('charKey');
+    const charName = $(e.currentTarget).closest('.memo-list-item').find('b').text(); // 주의: 위쪽 render에서 b태그를 안쓰고 div font-weight:bold를 썼으므로 선택자 조정 필요할 수 있음, 아래 수정됨.
     
-    if (confirm(`정말로 '${charName}' 캐릭터의 메모와 모든 설정을 삭제하시겠습니까?`)) {
-        delete settings.charData[charIdToDelete];
-        if (this_chid === charIdToDelete) {
+    // 안전하게 이름 가져오기
+    const displayName = $(e.currentTarget).closest('.memo-list-item').find('.memo-list-item-content > div:first-child').text() || '캐릭터';
+
+    if (confirm(`정말로 '${displayName}' 캐릭터의 메모와 모든 설정을 삭제하시겠습니까?`)) {
+        delete settings.charData[charKeyToDelete];
+        
+        // 만약 현재 보고 있는 캐릭터의 데이터를 삭제했다면 입력창도 비워줌
+        const currentCharKey = getCharacterKey(this_chid);
+        if (currentCharKey === charKeyToDelete) {
             $('#popup-memo-textarea').val('');
         }
+        
         saveSettingsDebounced();
         renderCharMemoList();
         applySettings();
