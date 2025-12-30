@@ -299,7 +299,6 @@ function applySettings() {
     updateWandButtonStatus();
     if ($memoContainer.length === 0) return;
 
-    $memoContainer.toggle(!!settings.enabled);
     const isMobile = window.innerWidth <= 768;
 
     if (!settings.pos || isNaN(settings.pos.top) || isNaN(settings.pos.left)) {
@@ -325,9 +324,15 @@ function applySettings() {
             left: `${settings.pos.left}px`,
             width: `${settings.width}px`,
             height: `${settings.height}px`, 
-            'transform': 'none',
-            'display': 'flex'
+            'transform': 'none'
         });
+    }
+
+    // 활성화 여부에 따라 display 속성 최종 적용
+    if (settings.enabled) {
+        $memoContainer.css('display', 'flex');
+    } else {
+        $memoContainer.hide();
     }
 
     renderTabs();
