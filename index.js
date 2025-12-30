@@ -154,21 +154,26 @@ function createMemoPopup() {
     const $memoContainer = $('#popup-memo-container');
     const $memoTextarea = $('#popup-memo-textarea');
 
-    $('#memo-toggle-ignore').on('click', toggleIgnoreClick);
+    $('#memo-toggle-ignore').on('click', (e) => {
+        e.stopPropagation();
+        toggleIgnoreClick();
+    });
+    $('#memo-toggle-ignore').on('mousedown', (e) => e.stopPropagation());
+    $('#memo-toggle-ignore').on('mouseup', (e) => e.stopPropagation());
+
     $memoTextarea.on('input', saveMemoContentDebounced);
 
     bindDragFunctionality($memoContainer);
     
     $memoTextarea.on('mousedown', (e) => {
-        // 텍스트 영역 클릭 시 탭 수정 팝업이 열려있다면 닫기
         $('#memo-tab-edit-popup').remove();
         e.stopPropagation();
     });
 
     $memoContainer.on('mouseup', function() {
         if (window.innerWidth > 768) {
-            const currentWidth = $memoContainer.width();
-            const currentHeight = $memoContainer.height();
+            const currentWidth = $memoContainer.outerWidth();
+            const currentHeight = $memoContainer.outerHeight();
             if (settings.width !== currentWidth || settings.height !== currentHeight) {
                 settings.width = currentWidth;
                 settings.height = currentHeight;
