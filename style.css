@@ -143,19 +143,27 @@
     flex-grow: 1;
     width: 100%;
     padding: 5px 15px;
-    border: none;
+    /* 테마에서 부여하는 스타일 초기화 */
+    border: none !important;
+    background-color: transparent !important;
+    background-image: none !important; 
+    box-shadow: none !important; 
+    outline: none !important;
+    
     resize: none;
-    outline: none;
     font-size: 0.95rem;
     line-height: 1.4;
     box-sizing: border-box;
-    background-color: transparent; 
-    color: #333;
+    
+    color: #333 !important; 
+    
     pointer-events: auto !important; 
     cursor: text;
 }
 #popup-memo-textarea:focus {
-    background-color: rgba(255, 255, 255, 0.1); 
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* 애니메이션 */
