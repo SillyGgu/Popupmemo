@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS = {
     width: 350,
     height: 250,
     bgOpacity: 0.7,
+    bgBlur: 5,
     bgImage: '',
     
     charBubbleColor: '#FFFFFF', 
@@ -125,6 +126,7 @@ function createMemoPopup() {
 
     const memoHTML = `
         <div id="popup-memo-container">
+            <div id="memo-background-layer"></div>
             <div id="memo-tabs-container"></div>
             <div id="memo-header">
                 <div id="memo-profile-area">
@@ -377,16 +379,30 @@ function applySettings() {
 
 function applyBackgroundStyle() {
     const $memoContainer = $('#popup-memo-container');
-    const opacity = settings.bgOpacity || 0.7;
+    const opacity = settings.bgOpacity !== undefined ? settings.bgOpacity : 0.7;
+    const blurAmount = settings.bgBlur !== undefined ? settings.bgBlur : 5;
     const imageURL = settings.bgImage;
 
+    const bgColor = `rgba(255, 255, 255, ${opacity})`;
+
+    
+    const cssVariables = {
+        '--memo-bg-color': bgColor,
+        '--memo-bg-img': imageURL ? `url(${imageURL})` : 'none',
+        '--memo-img-blur': imageURL ? `${blurAmount}px` : '0px',
+        '--memo-backdrop-blur': imageURL ? '0px' : `${blurAmount}px`
+    };
+
+    $memoContainer.css(cssVariables);
+    
     $memoContainer.css({
-        'background-color': `rgba(255, 255, 255, ${opacity})`,
-        'background-image': imageURL ? `url(${imageURL})` : 'none',
-        'background-size': 'cover',
-        'background-position': 'center',
-        'background-blend-mode': 'overlay',
-        'backdrop-filter': imageURL ? 'none' : 'blur(5px)',
+        'background-color': '',
+        'background-image': '',
+        'background-size': '',
+        'background-position': '',
+        'background-blend-mode': '',
+        'backdrop-filter': '',
+        '-webkit-backdrop-filter': ''
     });
 }
 
@@ -634,6 +650,7 @@ function onSettingChange() {
 
     settings.showWandButton = $('#memo_show_wand_button').prop('checked');
     settings.bgOpacity = parseFloat($('#memo_bg_opacity_input').val()) || 0.7;
+    settings.bgBlur = parseInt($('#memo_bg_blur_input').val()) || 0;
     settings.bgImage = $('#memo_bg_image_input').val().trim();
     settings.charBubbleColor = $('#memo_char_bubble_color_input').val().trim() || '#FFFFFF';
     settings.userBubbleColor = $('#memo_user_bubble_color_input').val().trim() || '#F0F0F0';
@@ -660,6 +677,7 @@ function loadSettingsToUI() {
     $('#memo_storage_mode_toggle').prop('checked', settings.useCharacterStorage);
     $('#memo_show_wand_button').prop('checked', settings.showWandButton);
     $('#memo_bg_opacity_input').val(settings.bgOpacity);
+    $('#memo_bg_blur_input').val(settings.bgBlur !== undefined ? settings.bgBlur : 5);
     $('#memo_bg_image_input').val(settings.bgImage);
     $('#memo_char_bubble_color_input').val(settings.charBubbleColor);
     $('#memo_user_bubble_color_input').val(settings.userBubbleColor);
@@ -925,7 +943,7 @@ function importSettings(event) {
         try {
             const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
             $("#extensions_settings2").append(settingsHtml);
-            $('#memo_enable_toggle, #memo_storage_mode_toggle, #memo_bg_opacity_input').on('change', onSettingChange);
+            $('#memo_enable_toggle, #memo_storage_mode_toggle, #memo_bg_opacity_input, #memo_bg_blur_input').on('change', onSettingChange);
             $('#memo_show_wand_button').on('change', onSettingChange);
             $('#memo_char_bubble_color_input, #memo_user_bubble_color_input').on('change', onSettingChange); 
             $('.memo-global-char-bubble-input, .memo-global-user-bubble-input, .memo-char-bubble-input, .memo-user-char-bubble-input').on('input', onSettingChange); 
